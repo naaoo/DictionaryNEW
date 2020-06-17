@@ -1,4 +1,5 @@
 ﻿using DictionaryData;
+using Renci.SshNet.Security;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -7,8 +8,14 @@ using System.Linq;
 
 namespace DictionaryLogic
 {
+    
     public class DictionaryController
     {
+        public Language KeyLang;
+        public Language TransLang1;
+        public Language TransLang2;
+        public Language TransLang3;
+
         /// <summary>
         /// contains word-list and methods to fetch and write data
         /// </summary>
@@ -63,24 +70,73 @@ namespace DictionaryLogic
             return wordRepository.wordsDict.OrderBy(word => word.Key.word).Select(x => $"{x.Key.word}").ToList();
         }
 
-        public void AddWord(Word germanWord, Word englishWord, Word spanishWord)
+        /// <summary>
+        /// adds all words and relations to database
+        /// </summary>
+        /// <param name="word1"></param>
+        /// <param name="word2"></param>
+        /// <param name="word3"></param>
+        /// <param name="word4"></param>
+        public void AddAllWords(List<Word> words)
         {
-            var insDE = wordRepository.InsertWord(germanWord);
-            var insEN = wordRepository.InsertWord(englishWord);
-            var insES = wordRepository.InsertWord(spanishWord);
-            if (germanWord.IsValid && englishWord.IsValid)
+            var relations = wordRepository.SelectAllRelations();
+            // adds words
+            foreach (var word in words)
             {
-                wordRepository.InsertRelation(germanWord, englishWord);
+                wordRepository.InsertWord(word);
+                // add relations
+                foreach (var relWord in words)
+                {
+                    if (relWord != word)
+                    {
+                        bool relationExists = false;
+                        foreach (var relation in relations)
+                        {
+                            if ((relation[0] == relWord.word || relation[1] == relWord.word) 
+                                && (relation[0] == word.word || relation[1] == word.word))
+                            {
+                                relationExists = true;
+                            }
+                        }
+                        if (!relationExists)
+                        {
+                            wordRepository.InsertRelation(word, relWord);
+                        }
+                    }
+                }
             }
-            if (insDE && insES)
+            wordRepository.FetchWords(KeyLang);
+        }
+
+        public void SetLanguages(string langString, string target)
+        {
+            Language lang;
+            Enum.TryParse(langString, out lang);
+            switch (target)
             {
-                wordRepository.InsertRelation(germanWord, spanishWord);
+                case "key" :
+                    KeyLang = lang; break;
+                case "trans1":
+                    TransLang1 = lang; break;
+                case "trans2":
+                    TransLang1 = lang; break;
+                case "trans3":
+                    TransLang1 = lang; break;
             }
-            if (insEN && insES)
+        }
+
+        public string GetLabel(string lang, string keylang)
+        {
+            if (keylang == lang)
             {
-                wordRepository.InsertRelation(englishWord, spanishWord);
+                lang = "";
             }
-            wordRepository.FetchWords();
+            return lang;
+        }
+
+        public void ExportAll()
+        {
+            wordRepository.WriteToCSV();
         }
     }
 }
