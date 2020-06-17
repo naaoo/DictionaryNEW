@@ -1,6 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\DictionaryData",
+    "\\DictionaryData\\bin",
+    "\\DictionaryData\\bin\\Debug",
+    "\\DictionaryData\\bin\\Debug\\netstandard2.0"
   ],
   "SelectedNode": "\\Dictionary.sln",
   "PreviewInSolutionExplorer": false
